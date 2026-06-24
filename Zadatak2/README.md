@@ -1,10 +1,55 @@
-## Big picture arhitektura
+# Zadatak 2 - Sustav za vodjenje parkiralista
 
-https://mermaid.live
+## Cilj sustava
+
+Potrebno je osmisliti sustav za vodjenje garaze koji omogucuje naplatu parkiranja prema vremenu zauzetosti parkirnog mjesta, kontrolu ulaza i izlaza, pracenje slobodnih mjesta te mjesecni uvid u poslovanje garaze.
+
+Sustav mora podrzavati placanje na naplatnim aparatima po katovima, ugovorne korisnike, zabranu placanja na izlazu, pravilo da korisnik ima 10 minuta za izlaz nakon placanja te posebnu akciju u kojoj su nenatkrivena mjesta u kisnim uvjetima 50% jeftinija ako je vozilo barem 33% parkiranog vremena bilo na kisi.
+
+Najkriticniji dio sustava je naplata parkiranja. Funkcionalnosti poput kisne akcije i prikaza slobodnih mjesta po katu su korisne, ali ne smiju ugroziti stabilnost naplate, evidenciju ulaza/izlaza i osnovnu kontrolu pristupa.
+
+## Kljucni dijelovi sustava
+
+| Dio sustava | Odgovornost |
+| --- | --- |
+| Ulazna rampa | Identifikacija korisnika, provjera kapaciteta, otvaranje ulaza i kreiranje parking sesije. |
+| Izlazna rampa | Provjera placanja, provjera roka od 10 minuta nakon placanja i zatvaranje parking sesije. |
+| Naplatni aparat | Izracun cijene, provjera aktivne sesije, provedba placanja i izdavanje potvrde. |
+| Backend/API | Centralna poslovna logika za sesije, naplatu, tarife, ugovore, kapacitete i izvjestaje. |
+| Baza podataka | Trajna pohrana garaze, katova, mjesta, korisnika, sesija, uplata, tarifa i izvjestaja. |
+| Modul za tarife | Pravila obracuna cijene, ugovorni modeli, popusti i buduce akcije. |
+| Weather servis | Evidencija kisnih razdoblja za obracun popusta na nenatkrivenim mjestima. |
+| Reporting modul | Mjesecni izvjestaji o prihodu, popunjenosti, ugovornim korisnicima i isplativosti akcija. |
+| Admin sucelje | Upravljanje garazom, parkirnim mjestima, tarifama, ugovorima i pregled izvjestaja. |
+| Display slobodnih mjesta | Prikaz ukupnog broja slobodnih mjesta i, po mogucnosti, slobodnih mjesta po katu. |
+
+## Prioriteti zahtjeva
+
+| Prioritet | Zahtjev | Obrazlozenje |
+| --- | --- | --- |
+| Kriticno | Naplata parkiranja | Prihod garaze i izlaz vozila ovise o ispravnoj naplati. |
+| Kriticno | Evidencija ulaza i izlaza | Bez pouzdane sesije nije moguce tocno naplatiti parking. |
+| Kriticno | Identitet korisnika | Klijent izricito trazi osiguranje identiteta korisnika garaze. |
+| Visoko | Ukupan broj slobodnih mjesta | Potencijalnim korisnicima je vazno znati ima li mjesta u garazi. |
+| Srednje | Broj slobodnih mjesta po katu | Korisno za navigaciju, ali nije primarni proces. |
+| Srednje | Mjesecni izvjestaji | Vazno za vlasnika i poslovnu analizu rada garaze. |
+| Nize | Kisna akcija | Korisna marketinska akcija, ali ne smije ugroziti osnovni proces naplate. |
+
+## Kljucni procesi
+
+1. Ulazak vozila u garazu i pokretanje parking sesije.
+2. Evidencija zauzimanja parkirnog mjesta i azuriranje kapaciteta.
+3. Obracun cijene prema trajanju parkiranja, tipu mjesta, tarifi i mogucim akcijama.
+4. Placanje na naplatnom aparatu ili obracun prema ugovoru.
+5. Izlazak iz garaze unutar 10 minuta nakon placanja.
+6. Dodatna naplata ako korisnik zakasni s izlazom nakon placanja.
+7. Prikupljanje podataka za mjesecne izvjestaje i poslovnu analizu.
+
+## Big picture arhitektura
 
 ```mermaid
 flowchart LR
-    User[Korisnik garaže] --> EntryGate[Ulazna rampa]
+    User[Korisnik garaze] --> EntryGate[Ulazna rampa]
     EntryGate --> Backend[Parking sustav]
     Backend --> Database[(Baza podataka)]
     Backend --> PaymentMachine[Naplatni aparat]
