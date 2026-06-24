@@ -45,6 +45,38 @@ Najkriticniji dio sustava je naplata parkiranja. Funkcionalnosti poput kisne akc
 6. Dodatna naplata ako korisnik zakasni s izlazom nakon placanja.
 7. Prikupljanje podataka za mjesecne izvjestaje i poslovnu analizu.
 
+## Otvorena pitanja i pretpostavke
+
+Specifikacija ostavlja nekoliko detalja otvorenima. U nastavku su navedene pretpostavke koje se koriste za idejno rjesenje, uz pitanja koja bi trebalo potvrditi s klijentom prije detaljne implementacije.
+
+| Tema | Pretpostavka / pitanje |
+| --- | --- |
+| Identifikacija korisnika | Pretpostavlja se da se korisnik identificira karticom, ticketom, QR kodom ili registarskom oznakom. Tocan mehanizam treba potvrditi. |
+| Placanje na izlazu | Placanje na izlazu nije dopusteno. Izlazna rampa samo provjerava status placanja i rok za izlaz. |
+| Ugovorni korisnici | Ugovorni korisnici mogu imati drugaciji model naplate, npr. mjesecni obracun, pretplatu ili dodijeljena prava pristupa. |
+| Dodjela mjesta | Sustav moze pratiti tocno parkirno mjesto ili samo kat/zonu. Za kisni popust treba znati je li mjesto natkriveno. |
+| Kisni podaci | Pretpostavlja se integracija s vremenskim servisom ili lokalnim senzorom kise. Potrebno je definirati izvor istine za kisne intervale. |
+| Slobodna mjesta po katu | Prikaz po katu je pozeljan, ali nije kritican. Ukupan broj slobodnih mjesta ima veci prioritet. |
+| Reporti | Potrebno je potvrditi zeljeni format izvjestaja, npr. dashboard, PDF, Excel ili automatska mjesecna e-mail dostava. |
+| Vrste korisnika | Specifikacija spominje mogucnost vise vrsta korisnika, pa model treba omoguciti prosirenje bez promjene osnovne naplate. |
+
+## Potencijalni problemi i rizici
+
+| Rizik | Utjecaj | Predlozeno rjesenje |
+| --- | --- | --- |
+| Kvar naplatnog aparata | Korisnik ne moze platiti i ne moze izaci iz garaze. | Vise aparata po garazi, health-check aparata, fallback na drugi aparat i administrativni override uz audit log. |
+| Nedostupnost payment providera | Naplata ne prolazi iako je sustav garaze ispravan. | Jasno stanje neuspjele naplate, ponovni pokusaj, evidentiranje transakcijskog statusa i zabrana otvaranja izlaza dok naplata nije potvrdena. |
+| Nedostupnost centralnog backend-a | Ulaz, izlaz i naplata mogu stati. | Visoka dostupnost backend-a, lokalni cache minimalnih pravila na rampama/aparatima i sinkronizacija nakon oporavka. |
+| Neispravan broj slobodnih mjesta | Korisnici dobivaju krivu informaciju o dostupnosti garaze. | Brojanje temeljiti na aktivnim sesijama, periodicna rekonsilijacija sa senzorima/rampama i rucna korekcija uz audit log. |
+| Korisnik zakasni izaci nakon placanja | Nastaje spor oko dodatne naplate. | Jasno spremiti `PaidUntilUtc` i `ExitGraceUntilUtc`, prikazati rok na potvrdi i na izlazu traziti doplatu ako je rok istekao. |
+| Nepouzdan weather servis | Kisni popust moze biti pogresno primijenjen. | Spremati vremenske uzorke u bazu, koristiti lokalni senzor ili pouzdan servis i omoguciti audit izracuna popusta. |
+| Nejasan identitet korisnika | Tesko je dokazati tko koristi uslugu ili ugovor. | Uvesti jedinstveni access credential, povezati ga s korisnikom/ugovorom i logirati ulazne/izlazne dogadaje. |
+| Zlouporaba kartice ili ticketa | Moguc neovlasteni izlaz ili prijenos prava pristupa. | Jedna aktivna sesija po credentialu, status credentiala, validacija na ulazu i izlazu te blokiranje sumnjivih stanja. |
+| Promjena tarifa tijekom aktivne sesije | Moze nastati nejasan obracun cijene. | Verzionirati tarife i spremiti referencu na tarifu/ruleset koji vrijedi za obracun sesije. |
+| GDPR i osobni podaci | Identitet korisnika i ugovori mogu ukljucivati osobne podatke. | Minimalna pohrana osobnih podataka, kontrola pristupa, audit log i definirani rokovi cuvanja podataka. |
+| Mjesecni reporti koriste nepotpune podatke | Vlasnik dobiva pogresnu poslovnu sliku. | Reporte graditi iz zakljucanih uplata i zatvorenih sesija, oznaciti nepotpune podatke i cuvati agregirane rezultate. |
+| Buduce akcije osim kisne | Hardkodirana kisna akcija otezava prosirenje. | Uvesti modul za pricing rules kako bi se kasnije dodale nove akcije bez promjene osnovnog procesa naplate. |
+
 ## Big picture arhitektura
 
 ```mermaid
