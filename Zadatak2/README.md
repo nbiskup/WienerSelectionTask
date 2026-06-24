@@ -77,6 +77,27 @@ Specifikacija ostavlja nekoliko detalja otvorenima. U nastavku su navedene pretp
 | Mjesecni reporti koriste nepotpune podatke | Vlasnik dobiva pogresnu poslovnu sliku. | Reporte graditi iz zakljucanih uplata i zatvorenih sesija, oznaciti nepotpune podatke i cuvati agregirane rezultate. |
 | Buduce akcije osim kisne | Hardkodirana kisna akcija otezava prosirenje. | Uvesti modul za pricing rules kako bi se kasnije dodale nove akcije bez promjene osnovnog procesa naplate. |
 
+## Arhitekturne odluke
+
+| Odluka | Razlog |
+| --- | --- |
+| Centralni backend je izvor istine za parking sesije | Ulaz, izlaz, naplata i kapaciteti moraju koristiti isti status sesije kako ne bi nastali konflikti. |
+| Naplata je izdvojena kao najkriticniji proces | Proces placanja mora biti stabilan, auditabilan i neovisan o manje kriticnim funkcijama poput reportinga ili prikaza po katu. |
+| Pricing modul koristi verzionirane tarife i pravila | Tarife i akcije se mogu mijenjati kroz vrijeme, a svaka naplata mora biti objasnjiva i ponovljivo izracunljiva. |
+| Kisna akcija je pricing rule, a ne poseban tok naplate | Time se omogucuje dodavanje buducih akcija bez mijenjanja osnovnog procesa placanja. |
+| Weather podaci se spremaju lokalno u bazu | Obracun kisnog popusta mora se moci dokazati i nakon sto vanjski servis vise ne vraca stare podatke. |
+| Izlazna rampa ne provodi placanje | Klijent ne zeli placanje na izlazu, pa izlazna rampa samo provjerava je li sesija placena i je li rok za izlaz valjan. |
+| Slobodna mjesta se racunaju iz aktivnih sesija i korekcija | Ukupan broj slobodnih mjesta je vazan, ali treba imati mehanizam korekcije zbog senzora, rampi i iznimnih situacija. |
+| Reporting koristi agregirane i zakljucene podatke | Poslovni izvjestaji ne bi trebali opterecivati kriticni dio sustava niti mijenjati povijesne rezultate nakon zakljucenja mjeseca. |
+| Administrativne intervencije zahtijevaju audit log | Rucno otvaranje rampe, korekcija kapaciteta ili storniranje naplate mora biti vidljivo i povezano s korisnikom koji je akciju napravio. |
+| Sustav se projektira modularno | Razdvajanje rampi, naplate, tarife, weather integracije i reportinga smanjuje rizik da sporedni feature ugrozi naplatu. |
+
+## Predlozena logicka arhitektura
+
+Rjesenje se moze promatrati kao modularna aplikacija s centralnim backend/API slojem i relacijskom bazom podataka. Ulazna rampa, izlazna rampa i naplatni aparati komuniciraju s backendom preko API-ja. Backend upravlja parking sesijama, validira identitet korisnika, provodi pricing pravila, evidentira uplate i azurira kapacitet garaze.
+
+Reporting i weather integracija su podrzavajuci moduli. Oni daju dodatnu poslovnu vrijednost, ali ne smiju blokirati osnovne procese ulaza, placanja i izlaza. Ako weather servis trenutno nije dostupan, sustav i dalje mora moci naplatiti parking po osnovnoj tarifi, uz jasno evidentiranje da kisni popust nije mogao biti automatski potvrden.
+
 ## Big picture arhitektura
 
 ```mermaid
