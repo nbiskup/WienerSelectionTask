@@ -369,3 +369,210 @@ erDiagram
         decimal RainDiscountAmount
     }
 ```
+## Pseudokod kljucnih procesa
+
+### Pokretanje parking sesije
+
+```text
+function StartParkingSession(accessIdentifier, entryGateId):
+    credential = FindActiveCredential(accessIdentifier)
+    if credential is null:
+        return DenyEntry("Identitet korisnika nije valjan")
+
+    garage = GetGarageByEntryGate(entryGateId)
+    if garage.AvailableSpots <= 0:
+        return DenyEntry("Garaza je puna")
+
+    contract = FindValidContract(credential.CustomerId, nowUtc)
+    spot = AssignAvailableSpot(garage.Id, preferredFloor = null)
+
+    session = new ParkingSession
+    session.CustomerId = credential.CustomerId
+    session.AccessCredentialId = credential.Id
+    session.ContractId = contract?.Id
+    session.ParkingSpotId = spot.Id
+    session.EntryAtUtc = nowUtc
+    session.Status = "Active"
+
+    Save(session)
+    MarkSpotAsOccupied(spot.Id)
+    DecreaseAvailableCapacity(spot.FloorId)
+    OpenEntryGate(entryGateId)
+
+    return AllowEntry(session.Id)
+```
+
+### Obracun cijene parkiranja
+
+```text
+function CalculateParkingPrice(sessionId, paymentTimeUtc):
+    session = GetActiveSession(sessionId)
+    if session is null:
+        throw "Parking sesija nije aktivna"
+
+    tariff = GetValidTariff(paymentTimeUtc)
+    spot = GetParkingSpot(session.ParkingSpotId)
+
+    parkedMinutes = MinutesBetween(session.EntryAtUtc, paymentTimeUtc)
+    billableHours = RoundUpToBillableHours(parkedMinutes, tariff)
+
+    if spot.IsCovered:
+        baseAmount = billableHours * tariff.HourlyRateCovered
+        discountAmount = 0
+        appliedRule = null
+    else:
+        baseAmount = billableHours * tariff.HourlyRateUncovered
+        discount = ApplyRainDiscount(session, paymentTimeUtc, baseAmount)
+        discountAmount = discount.Amount
+        appliedRule = discount.RuleCode
+
+    totalAmount = baseAmount - discountAmount
+
+    return PricePreview(
+        baseAmount = baseAmount,
+        discountAmount = discountAmount,
+        totalAmount = totalAmount,
+        tariffId = tariff.Id,
+        appliedRule = appliedRule
+    )
+```
+
+### Primjena kisnog popusta
+
+```text
+function ApplyRainDiscount(session, paymentTimeUtc, baseAmount):
+    spot = GetParkingSpot(session.ParkingSpotId)
+    if spot.IsCovered:
+        return NoDiscount()
+
+    totalMinutes = MinutesBetween(session.EntryAtUtc, paymentTimeUtc)
+    rainMinutes = CountRainMinutes(session.EntryAtUtc, paymentTimeUtc)
+
+    if totalMinutes <= 0:
+        return NoDiscount()
+
+    rainRatio = rainMinutes / totalMinutes
+
+    if rainRatio >= 0.33:
+        return Discount(
+            ruleCode = "RAIN_UNCOVERED_50",
+            amount = baseAmount * 0.50
+        )
+
+    return NoDiscount()
+```
+
+### Provedba placanja
+
+```text
+function ProcessPayment(sessionId, paymentMachineId, paymentMethod):
+    session = GetActiveSession(sessionId)
+    if session is null:
+        return PaymentRejected("Parking sesija nije aktivna")
+
+    price = CalculateParkingPrice(sessionId, nowUtc)
+    transaction = PaymentProvider.Charge(paymentMethod, price.TotalAmount)
+
+    if transaction.Status != "Approved":
+        SaveFailedPaymentAttempt(sessionId, paymentMachineId, transaction)
+        return PaymentRejected("Naplata nije uspjela")
+
+    payment = new Payment
+    payment.ParkingSessionId = sessionId
+    payment.PaymentMachineId = paymentMachineId
+    payment.TariffId = price.TariffId
+    payment.Amount = price.TotalAmount
+    payment.DiscountAmount = price.DiscountAmount
+    payment.PaidAtUtc = nowUtc
+    payment.PaymentMethod = paymentMethod
+    payment.ProviderTransactionId = transaction.Id
+
+    Save(payment)
+
+    session.PaidUntilUtc = nowUtc
+    session.ExitGraceUntilUtc = nowUtc + 10 minutes
+    session.Status = "Paid"
+    Save(session)
+
+    return PaymentAccepted(payment.Id, session.ExitGraceUntilUtc)
+```
+
+### Provjera izlaza iz garaze
+
+```text
+function ValidateExit(accessIdentifier, exitGateId):
+    credential = FindActiveCredential(accessIdentifier)
+    if credential is null:
+        return DenyExit("Identitet korisnika nije valjan")
+
+    session = FindOpenSessionByCredential(credential.Id)
+    if session is null:
+        return DenyExit("Nema aktivne parking sesije")
+
+    if session.ContractId is not null and IsContractValid(session.ContractId, nowUtc):
+        CloseParkingSession(session, exitGateId)
+        return AllowExit()
+
+    if session.Status != "Paid":
+        return DenyExit("Parking nije placen")
+
+    if nowUtc > session.ExitGraceUntilUtc:
+        session.Status = "PaymentExpired"
+        Save(session)
+        return DenyExit("Istekao je rok od 10 minuta nakon placanja")
+
+    CloseParkingSession(session, exitGateId)
+    return AllowExit()
+```
+
+### Zatvaranje parking sesije
+
+```text
+function CloseParkingSession(session, exitGateId):
+    session.ExitAtUtc = nowUtc
+    session.Status = "Closed"
+    Save(session)
+
+    MarkSpotAsAvailable(session.ParkingSpotId)
+    IncreaseAvailableCapacityBySpot(session.ParkingSpotId)
+    OpenExitGate(exitGateId)
+
+    WriteAuditLog(
+        action = "ParkingSessionClosed",
+        sessionId = session.Id,
+        timestampUtc = nowUtc
+    )
+```
+
+### Generiranje mjesecnog izvjestaja
+
+```text
+function GenerateMonthlyReport(garageId, year, month):
+    period = GetMonthPeriod(year, month)
+
+    payments = GetApprovedPayments(garageId, period)
+    sessions = GetParkingSessions(garageId, period)
+    capacity = GetGarageCapacity(garageId)
+    rainDiscounts = SumDiscounts(payments, ruleCode = "RAIN_UNCOVERED_50")
+
+    totalRevenue = Sum(payments.Amount)
+    totalSessions = Count(sessions)
+    averageDuration = AverageMinutes(sessions.EntryAtUtc, sessions.ExitAtUtc)
+    occupancy = CalculateAverageOccupancy(sessions, capacity, period)
+    peakOccupancy = CalculatePeakOccupancy(sessions, capacity, period)
+
+    report = new MonthlyReport
+    report.GarageId = garageId
+    report.Year = year
+    report.Month = month
+    report.TotalRevenue = totalRevenue
+    report.TotalSessions = totalSessions
+    report.AverageParkingDurationMinutes = averageDuration
+    report.AverageOccupancyPercent = occupancy
+    report.PeakOccupancyPercent = peakOccupancy
+    report.RainDiscountAmount = rainDiscounts
+    report.GeneratedAtUtc = nowUtc
+
+    Save(report)
+    return report
+```
