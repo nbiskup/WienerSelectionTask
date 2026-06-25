@@ -1,5 +1,23 @@
 # Zadatak 2 - Sustav za vodjenje parkiralista
 
+## Sadrzaj
+
+- [Cilj sustava](#cilj-sustava)
+- [Kljucni dijelovi sustava](#kljucni-dijelovi-sustava)
+- [Prioriteti zahtjeva](#prioriteti-zahtjeva)
+- [Kljucni procesi](#kljucni-procesi)
+- [Otvorena pitanja i pretpostavke](#otvorena-pitanja-i-pretpostavke)
+- [Potencijalni problemi i rizici](#potencijalni-problemi-i-rizici)
+- [Arhitekturne odluke](#arhitekturne-odluke)
+- [Predlozena logicka arhitektura](#predlozena-logicka-arhitektura)
+- [Big picture arhitektura](#big-picture-arhitektura)
+- [Proces ulaska, naplate i izlaska](#proces-ulaska-naplate-i-izlaska)
+- [Obracun cijene i kisnog popusta](#obracun-cijene-i-kisnog-popusta)
+- [Mjesecni reporting i poslovna analiza](#mjesecni-reporting-i-poslovna-analiza)
+- [Idejni model baze podataka](#idejni-model-baze-podataka)
+- [Pseudokod kljucnih procesa](#pseudokod-kljucnih-procesa)
+- [Zakljucak](#zakljucak)
+
 ## Cilj sustava
 
 Potrebno je osmisliti sustav za vodjenje garaze koji omogucuje naplatu parkiranja prema vremenu zauzetosti parkirnog mjesta, kontrolu ulaza i izlaza, pracenje slobodnih mjesta te mjesecni uvid u poslovanje garaze.
@@ -602,3 +620,11 @@ function GenerateMonthlyReport(garageId, year, month):
     Save(report)
     return report
 ```
+
+## Zakljucak
+
+Predlozeno rjesenje razdvaja kriticne procese naplate, ulaza i izlaza od podrzavajucih funkcionalnosti kao sto su kisna akcija, prikaz slobodnih mjesta po katu i mjesecni reporting. Time se smanjuje rizik da dodatne funkcionalnosti utjecu na osnovnu dostupnost garaze i naplatu parkiranja.
+
+Najvazniji dio sustava je pouzdana parking sesija koja povezuje identitet korisnika, vrijeme ulaska, parkirno mjesto, naplatu i izlaz. Na toj sesiji se temelje obracun cijene, provjera roka od 10 minuta nakon placanja, kapacitet garaze i poslovni izvjestaji.
+
+Za detaljnu implementaciju potrebno je s klijentom potvrditi odabrani nacin identifikacije korisnika, izvor podataka o kisi, format mjesecnih reporta i pravila za ugovorne korisnike. Arhitektura je zato namjerno postavljena modularno kako bi podrzala buduca pravila naplate i nove vrste korisnika bez promjene osnovnog procesa.
