@@ -154,7 +154,7 @@
             var detailLabels = [
                 ["Full name", "fullName"],
                 ["Address", "address"],
-                ["Created by", "createdBy"],
+                ["Created by email", "createdBy"],
                 ["External code", "externalCode"],
                 ["Partner number", "partnerNumber"],
                 ["Croatian PIN", "croatianPin"],
@@ -212,7 +212,12 @@
                         row.data("policyTotal", response.policyTotalFormatted);
                         row.find("[data-policy-count-cell]").text(response.policyCount);
                         row.find("[data-policy-total-cell]").text(response.policyTotalFormatted);
-                        row.find("[data-full-name-cell]").html("<span class='partner-name'>" + (response.isImportant ? "* " : "") + response.fullName + "</span>" + (response.isImportant ? " <span class='badge badge-soft-amber ml-2'>Flagged</span>" : ""));
+                        var nameCell = row.find("[data-full-name-cell]");
+                        nameCell.empty().append($("<span>").addClass("partner-name").text((response.isImportant ? "* " : "") + response.fullName));
+
+                        if (response.isImportant) {
+                            nameCell.append(" ").append($("<span>").addClass("badge badge-soft-amber ml-2").text("Flagged"));
+                        }
 
                         if (response.isImportant) {
                             row.addClass("important-row");

@@ -33,6 +33,7 @@ public sealed class PartnerCreateViewModel : IValidatableObject
     [Required]
     [EmailAddress]
     [StringLength(255)]
+    [Display(Name = "Created by email")]
     public string CreatedByUser { get; set; } = string.Empty;
 
     [Required]
