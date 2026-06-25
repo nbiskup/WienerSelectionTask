@@ -1,0 +1,228 @@
+@model IReadOnlyList<PartnerManagement.Models.PartnerListItem>
+@{
+    ViewData["Title"] = "Partners";
+    var highlightId = ViewBag.HighlightId as int?;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h3 mb-1">Insurance partners</h1>
+        <p class="text-muted mb-0">Partners are sorted by creation date, newest first.</p>
+    </div>
+    <a class="btn btn-primary" asp-action="Create">New partner</a>
+</div>
+
+@if (TempData["SuccessMessage"] is string successMessage)
+{
+    <div class="alert alert-success" role="alert">@successMessage</div>
+}
+
+<div class="table-responsive">
+    <table class="table table-hover table-sm align-middle partner-table">
+        <thead class="thead-dark">
+            <tr>
+                <th>Full name</th>
+                <th>Partner number</th>
+                <th>Croatian PIN</th>
+                <th>Type</th>
+                <th>Created UTC</th>
+                <th>Foreign</th>
+                <th>Gender</th>
+                <th class="text-right">Policies</th>
+                <th class="text-right">Policy amount</th>
+                <th class="text-right">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        @if (Model.Count == 0)
+        {
+            <tr>
+                <td colspan="10" class="text-center text-muted py-4">No partners have been entered yet.</td>
+            </tr>
+        }
+        else
+        {
+            foreach (var partner in Model)
+            {
+                var rowClass = partner.IsImportant ? "table-warning" : string.Empty;
+                if (highlightId == partner.PartnerId)
+                {
+                    rowClass = string.Join(" ", rowClass, "new-partner-row").Trim();
+                }
+
+                <tr class="partner-row @rowClass"
+                    data-partner-id="@partner.PartnerId"
+                    data-full-name="@partner.FullName"
+                    data-address="@(partner.Address ?? string.Empty)"
+                    data-created-by="@partner.CreatedByUser"
+                    data-external-code="@partner.ExternalCode"
+                    data-partner-number="@partner.PartnerNumber"
+                    data-croatian-pin="@(partner.CroatianPIN ?? string.Empty)"
+                    data-type="@partner.PartnerTypeName"
+                    data-created-at="@partner.CreatedAtUtc.ToString("yyyy-MM-dd HH:mm:ss")"
+                    data-is-foreign="@(partner.IsForeign ? "Yes" : "No")"
+                    data-gender="@partner.Gender"
+                    data-policy-count="@partner.PolicyCount"
+                    data-policy-total="@partner.TotalPolicyAmount.ToString("N2")">
+                    <td data-full-name-cell>@(partner.IsImportant ? "* " : string.Empty)@partner.FullName</td>
+                    <td>@partner.PartnerNumber</td>
+                    <td>@(string.IsNullOrWhiteSpace(partner.CroatianPIN) ? "-" : partner.CroatianPIN)</td>
+                    <td>@partner.PartnerTypeName</td>
+                    <td>@partner.CreatedAtUtc.ToString("yyyy-MM-dd HH:mm")</td>
+                    <td>@(partner.IsForeign ? "Yes" : "No")</td>
+                    <td>@partner.Gender</td>
+                    <td class="text-right" data-policy-count-cell>@partner.PolicyCount</td>
+                    <td class="text-right" data-policy-total-cell>@partner.TotalPolicyAmount.ToString("N2")</td>
+                    <td class="text-right">
+                        <button type="button" class="btn btn-sm btn-outline-primary add-policy-button" data-partner-id="@partner.PartnerId" data-partner-name="@partner.FullName">Add policy</button>
+                    </td>
+                </tr>
+            }
+        }
+        </tbody>
+    </table>
+</div>
+
+<div class="modal fade" id="partnerDetailsModal" tabindex="-1" role="dialog" aria-labelledby="partnerDetailsTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="partnerDetailsTitle">Partner details</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <dl class="row mb-0" id="partnerDetailsList"></dl>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="policyModal" tabindex="-1" role="dialog" aria-labelledby="policyModalTitle" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <form id="policyForm" asp-action="CreatePolicy" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-header">
+                    <h5 class="modal-title" id="policyModalTitle">Add policy</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="PartnerId" id="PolicyPartnerId" />
+                    <div class="alert alert-danger d-none" id="policyErrors"></div>
+                    <p class="text-muted" id="policyPartnerName"></p>
+                    <div class="form-group">
+                        <label for="PolicyNumber">Policy number</label>
+                        <input class="form-control" id="PolicyNumber" name="PolicyNumber" minlength="10" maxlength="15" required pattern="[A-Za-z0-9]+" />
+                    </div>
+                    <div class="form-group">
+                        <label for="PolicyAmount">Policy amount</label>
+                        <input class="form-control" id="PolicyAmount" name="PolicyAmount" type="number" step="0.01" min="0.01" required />
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save policy</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(function () {
+            var detailLabels = [
+                ["Full name", "fullName"],
+                ["Address", "address"],
+                ["Created by", "createdBy"],
+                ["External code", "externalCode"],
+                ["Partner number", "partnerNumber"],
+                ["Croatian PIN", "croatianPin"],
+                ["Type", "type"],
+                ["Created UTC", "createdAt"],
+                ["Foreign", "isForeign"],
+                ["Gender", "gender"],
+                ["Policies", "policyCount"],
+                ["Total policy amount", "policyTotal"]
+            ];
+
+            $(".partner-row").on("click", function (event) {
+                if ($(event.target).closest("button,a,input").length) {
+                    return;
+                }
+
+                var row = $(this);
+                var html = detailLabels.map(function (item) {
+                    var value = row.data(item[1]);
+                    if (value === undefined || value === null || value === "") {
+                        value = "-";
+                    }
+
+                    return "<dt class='col-sm-4'>" + item[0] + "</dt><dd class='col-sm-8'>" + value + "</dd>";
+                }).join("");
+
+                $("#partnerDetailsList").html(html);
+                $("#partnerDetailsModal").modal("show");
+            });
+
+            $(".add-policy-button").on("click", function (event) {
+                event.stopPropagation();
+                var button = $(this);
+                $("#PolicyPartnerId").val(button.data("partnerId"));
+                $("#policyPartnerName").text(button.data("partnerName"));
+                $("#PolicyNumber").val("");
+                $("#PolicyAmount").val("");
+                $("#policyErrors").addClass("d-none").empty();
+                $("#policyModal").modal("show");
+            });
+
+            $("#policyForm").on("submit", function (event) {
+                event.preventDefault();
+                var form = $(this);
+                var errors = $("#policyErrors");
+                errors.addClass("d-none").empty();
+
+                $.ajax({
+                    url: form.attr("action"),
+                    method: "POST",
+                    data: form.serialize(),
+                    success: function (response) {
+                        var row = $(".partner-row[data-partner-id='" + response.partnerId + "']");
+                        row.data("policyCount", response.policyCount);
+                        row.data("policyTotal", response.policyTotalFormatted);
+                        row.find("[data-policy-count-cell]").text(response.policyCount);
+                        row.find("[data-policy-total-cell]").text(response.policyTotalFormatted);
+                        row.find("[data-full-name-cell]").text((response.isImportant ? "* " : "") + response.fullName);
+
+                        if (response.isImportant) {
+                            row.addClass("table-warning");
+                        }
+
+                        $("#policyModal").modal("hide");
+                    },
+                    error: function (xhr) {
+                        var response = xhr.responseJSON;
+                        var messages = [];
+                        if (response && response.errors) {
+                            Object.keys(response.errors).forEach(function (key) {
+                                response.errors[key].forEach(function (message) {
+                                    messages.push(message);
+                                });
+                            });
+                        }
+
+                        if (messages.length === 0) {
+                            messages.push("Policy could not be saved.");
+                        }
+
+                        errors.removeClass("d-none").html(messages.join("<br />"));
+                    }
+                });
+            });
+        });
+    </script>
+}

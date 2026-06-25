@@ -1,0 +1,53 @@
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+body {
+  min-height: 100vh;
+  background: #f7f8fa;
+}
+
+main.container {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  box-shadow: 0 4px 18px rgba(15, 23, 42, 0.06);
+  margin-top: 24px;
+  margin-bottom: 24px;
+}
+
+.partner-table tbody tr {
+  cursor: pointer;
+}
+
+.partner-table th,
+.partner-table td {
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+.new-partner-row {
+  font-weight: 700;
+  outline: 2px solid #2f80ed;
+  outline-offset: -2px;
+}
+
+.partner-form {
+  max-width: 980px;
+}
+
+.form-actions {
+  border-top: 1px solid #e5e7eb;
+  margin-top: 1rem;
+  padding-top: 1rem;
+}
+
+.footer {
+  background: #fff;
+}
