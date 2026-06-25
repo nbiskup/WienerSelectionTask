@@ -5,10 +5,10 @@
     var partners = ViewBag.PartnerOptions as IReadOnlyList<PartnerOption> ?? Array.Empty<PartnerOption>();
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
+<div class="page-heading">
     <div>
         <h1 class="h3 mb-1">New policy</h1>
-        <p class="text-muted mb-0">Enter a policy number and policy amount for an existing partner.</p>
+        <p class="mb-0">Enter policy details for an existing partner.</p>
     </div>
     <a class="btn btn-outline-secondary" asp-action="Index">Back to list</a>
 </div>
@@ -18,33 +18,39 @@
     <div class="alert alert-info">Create a partner before entering policy details.</div>
 }
 
-<form asp-action="CreatePolicyPage" method="post" class="partner-form">
+<form asp-action="CreatePolicyPage" method="post" class="form-panel">
     @Html.AntiForgeryToken()
     <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
 
-    <div class="form-group">
-        <label asp-for="PartnerId">Partner</label>
-        <select asp-for="PartnerId" class="form-control" disabled="@(partners.Count == 0)">
-            <option value="">Select partner</option>
-            @foreach (var partner in partners)
-            {
-                <option value="@partner.PartnerId">@partner.FullName</option>
-            }
-        </select>
-        <span asp-validation-for="PartnerId" class="text-danger"></span>
+    <div class="form-section">
+        <div class="form-section-title">Policy owner</div>
+        <div class="form-group">
+            <label asp-for="PartnerId">Partner</label>
+            <select asp-for="PartnerId" class="form-control" disabled="@(partners.Count == 0)">
+                <option value="">Select partner</option>
+                @foreach (var partner in partners)
+                {
+                    <option value="@partner.PartnerId">@partner.FullName</option>
+                }
+            </select>
+            <span asp-validation-for="PartnerId" class="text-danger"></span>
+        </div>
     </div>
 
-    <div class="form-row">
-        <div class="form-group col-md-6">
-            <label asp-for="PolicyNumber"></label>
-            <input asp-for="PolicyNumber" class="form-control" minlength="10" maxlength="15" />
-            <small class="form-text text-muted">Alphanumeric, 10 to 15 characters.</small>
-            <span asp-validation-for="PolicyNumber" class="text-danger"></span>
-        </div>
-        <div class="form-group col-md-6">
-            <label asp-for="PolicyAmount"></label>
-            <input asp-for="PolicyAmount" class="form-control" type="number" step="0.01" min="0.01" />
-            <span asp-validation-for="PolicyAmount" class="text-danger"></span>
+    <div class="form-section">
+        <div class="form-section-title">Policy details</div>
+        <div class="form-row">
+            <div class="form-group col-md-6">
+                <label asp-for="PolicyNumber"></label>
+                <input asp-for="PolicyNumber" class="form-control" minlength="10" maxlength="15" />
+                <small class="form-text text-muted">Alphanumeric, 10 to 15 characters.</small>
+                <span asp-validation-for="PolicyNumber" class="text-danger"></span>
+            </div>
+            <div class="form-group col-md-6">
+                <label asp-for="PolicyAmount"></label>
+                <input asp-for="PolicyAmount" class="form-control" type="number" step="0.01" min="0.01" />
+                <span asp-validation-for="PolicyAmount" class="text-danger"></span>
+            </div>
         </div>
     </div>
 

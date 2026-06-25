@@ -4,10 +4,11 @@
     var highlightId = ViewBag.HighlightId as int?;
 }
 
-<div class="d-flex justify-content-between align-items-center mb-3">
+<div class="page-heading">
     <div>
         <h1 class="h3 mb-1">Insurance partners</h1>
-        <p class="text-muted mb-0">Partners are sorted by creation date, newest first.</p>
+        <p class="mb-0">Partners are sorted by creation date, newest first.</p>
+        <span class="metric-pill">@Model.Count partner@(Model.Count == 1 ? string.Empty : "s")</span>
     </div>
     <div class="btn-group">
         <a class="btn btn-outline-primary" asp-action="CreatePolicyPage">New policy</a>
@@ -20,9 +21,9 @@
     <div class="alert alert-success" role="alert">@successMessage</div>
 }
 
-<div class="table-responsive">
-    <table class="table table-hover table-sm align-middle partner-table">
-        <thead class="thead-dark">
+<div class="table-responsive table-shell">
+    <table class="table table-hover table-sm partner-table">
+        <thead>
             <tr>
                 <th>Full name</th>
                 <th>Partner number</th>
@@ -40,14 +41,20 @@
         @if (Model.Count == 0)
         {
             <tr>
-                <td colspan="10" class="text-center text-muted py-4">No partners have been entered yet.</td>
+                <td colspan="10">
+                    <div class="empty-state">
+                        <div class="empty-state-title">No partners yet</div>
+                        <div class="text-muted mb-3">Create the first partner to start entering policies.</div>
+                        <a class="btn btn-primary" asp-action="Create">New partner</a>
+                    </div>
+                </td>
             </tr>
         }
         else
         {
             foreach (var partner in Model)
             {
-                var rowClass = partner.IsImportant ? "table-warning" : string.Empty;
+                var rowClass = partner.IsImportant ? "important-row" : string.Empty;
                 if (highlightId == partner.PartnerId)
                 {
                     rowClass = string.Join(" ", rowClass, "new-partner-row").Trim();
@@ -67,13 +74,19 @@
                     data-gender="@partner.Gender"
                     data-policy-count="@partner.PolicyCount"
                     data-policy-total="@partner.TotalPolicyAmount.ToString("N2")">
-                    <td data-full-name-cell>@(partner.IsImportant ? "* " : string.Empty)@partner.FullName</td>
-                    <td>@partner.PartnerNumber</td>
+                    <td data-full-name-cell>
+                        <span class="partner-name">@(partner.IsImportant ? "* " : string.Empty)@partner.FullName</span>
+                        @if (partner.IsImportant)
+                        {
+                            <span class="badge badge-soft-amber ml-2">Flagged</span>
+                        }
+                    </td>
+                    <td><code>@partner.PartnerNumber</code></td>
                     <td>@(string.IsNullOrWhiteSpace(partner.CroatianPIN) ? "-" : partner.CroatianPIN)</td>
-                    <td>@partner.PartnerTypeName</td>
+                    <td><span class="badge badge-soft-blue">@partner.PartnerTypeName</span></td>
                     <td>@partner.CreatedAtUtc.ToString("yyyy-MM-dd HH:mm")</td>
-                    <td>@(partner.IsForeign ? "Yes" : "No")</td>
-                    <td>@partner.Gender</td>
+                    <td><span class="badge @(partner.IsForeign ? "badge-soft-green" : "badge-soft-gray")">@(partner.IsForeign ? "Yes" : "No")</span></td>
+                    <td><span class="badge badge-soft-gray">@partner.Gender</span></td>
                     <td class="text-right" data-policy-count-cell>@partner.PolicyCount</td>
                     <td class="text-right" data-policy-total-cell>@partner.TotalPolicyAmount.ToString("N2")</td>
                     <td class="text-right">
@@ -96,7 +109,7 @@
                 </button>
             </div>
             <div class="modal-body">
-                <dl class="row mb-0" id="partnerDetailsList"></dl>
+                <dl class="row mb-0 detail-list" id="partnerDetailsList"></dl>
             </div>
         </div>
     </div>
@@ -116,7 +129,7 @@
                 <div class="modal-body">
                     <input type="hidden" name="PartnerId" id="PolicyPartnerId" />
                     <div class="alert alert-danger d-none" id="policyErrors"></div>
-                    <p class="text-muted" id="policyPartnerName"></p>
+                    <p class="text-muted font-weight-bold" id="policyPartnerName"></p>
                     <div class="form-group">
                         <label for="PolicyNumber">Policy number</label>
                         <input class="form-control" id="PolicyNumber" name="PolicyNumber" minlength="10" maxlength="15" required pattern="[A-Za-z0-9]+" />
@@ -199,10 +212,10 @@
                         row.data("policyTotal", response.policyTotalFormatted);
                         row.find("[data-policy-count-cell]").text(response.policyCount);
                         row.find("[data-policy-total-cell]").text(response.policyTotalFormatted);
-                        row.find("[data-full-name-cell]").text((response.isImportant ? "* " : "") + response.fullName);
+                        row.find("[data-full-name-cell]").html("<span class='partner-name'>" + (response.isImportant ? "* " : "") + response.fullName + "</span>" + (response.isImportant ? " <span class='badge badge-soft-amber ml-2'>Flagged</span>" : ""));
 
                         if (response.isImportant) {
-                            row.addClass("table-warning");
+                            row.addClass("important-row");
                         }
 
                         $("#policyModal").modal("hide");

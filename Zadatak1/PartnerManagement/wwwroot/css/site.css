@@ -1,3 +1,15 @@
+:root {
+  --page-bg: #eef2f6;
+  --panel-border: #d9e0e8;
+  --panel-shadow: 0 16px 40px rgba(31, 41, 55, 0.08);
+  --ink: #18212f;
+  --muted: #667085;
+  --accent: #2457a6;
+  --accent-soft: #e8f0ff;
+  --success-soft: #e9f7ef;
+  --warning-soft: #fff4d6;
+}
+
 html {
   font-size: 14px;
 }
@@ -10,20 +22,98 @@ html {
 
 body {
   min-height: 100vh;
-  background: #f7f8fa;
+  background: var(--page-bg);
+  color: var(--ink);
+}
+
+.navbar {
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.18);
+}
+
+.navbar-brand {
+  align-items: center;
+  display: inline-flex;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.app-mark {
+  align-items: center;
+  background: #ffffff;
+  border-radius: 6px;
+  color: #1f2937;
+  display: inline-flex;
+  font-size: 0.78rem;
+  height: 28px;
+  justify-content: center;
+  margin-right: 10px;
+  width: 32px;
 }
 
 main.container {
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  box-shadow: 0 4px 18px rgba(15, 23, 42, 0.06);
-  margin-top: 24px;
-  margin-bottom: 24px;
+  background: #ffffff;
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  box-shadow: var(--panel-shadow);
+  margin-bottom: 28px;
+  margin-top: 28px;
+}
+
+.page-heading {
+  align-items: flex-start;
+  border-bottom: 1px solid #e6ebf1;
+  display: flex;
+  justify-content: space-between;
+  margin: -1.5rem -1.5rem 1.5rem;
+  padding: 1.5rem;
+}
+
+.page-heading h1 {
+  color: #111827;
+  font-weight: 700;
+}
+
+.page-heading p {
+  color: var(--muted);
+}
+
+.metric-pill {
+  background: var(--accent-soft);
+  border: 1px solid #c9dcff;
+  border-radius: 999px;
+  color: var(--accent);
+  display: inline-block;
+  font-size: 0.84rem;
+  font-weight: 700;
+  margin-top: 0.35rem;
+  padding: 0.24rem 0.7rem;
+}
+
+.table-shell {
+  border: 1px solid #dfe5ec;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.partner-table {
+  margin-bottom: 0;
+}
+
+.partner-table thead th {
+  background: #f3f6f9;
+  border-bottom: 1px solid #d9e0e8;
+  color: #475467;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .partner-table tbody tr {
   cursor: pointer;
+}
+
+.partner-table tbody tr:hover {
+  background: #f9fbfd;
 }
 
 .partner-table th,
@@ -32,22 +122,111 @@ main.container {
   white-space: nowrap;
 }
 
-.new-partner-row {
+.partner-name {
+  color: #111827;
   font-weight: 700;
-  outline: 2px solid #2f80ed;
-  outline-offset: -2px;
 }
 
-.partner-form {
+.badge-soft-blue {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.badge-soft-green {
+  background: var(--success-soft);
+  color: #137a3d;
+}
+
+.badge-soft-gray {
+  background: #edf0f3;
+  color: #4b5563;
+}
+
+.badge-soft-amber {
+  background: var(--warning-soft);
+  color: #8a5b00;
+}
+
+.important-row {
+  background: #fffaf0;
+}
+
+.new-partner-row {
+  box-shadow: inset 4px 0 0 var(--accent);
+  font-weight: 700;
+}
+
+.empty-state {
+  padding: 3rem 1rem;
+  text-align: center;
+}
+
+.empty-state-title {
+  color: #111827;
+  font-weight: 700;
+  margin-bottom: 0.35rem;
+}
+
+.detail-list dt {
+  color: #667085;
+  font-weight: 700;
+}
+
+.detail-list dd {
+  color: #18212f;
+  margin-bottom: 0.85rem;
+}
+
+.form-panel {
   max-width: 980px;
 }
 
+.form-section {
+  border-bottom: 1px solid #e6ebf1;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+}
+
+.form-section:last-of-type {
+  border-bottom: 0;
+}
+
+.form-section-title {
+  color: #475467;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.9rem;
+  text-transform: uppercase;
+}
+
+.form-control {
+  border-color: #cfd7e2;
+}
+
+.form-control:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 0.16rem rgba(36, 87, 166, 0.16);
+}
+
 .form-actions {
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid #e6ebf1;
   margin-top: 1rem;
   padding-top: 1rem;
 }
 
 .footer {
-  background: #fff;
+  background: #ffffff;
+}
+
+@media (max-width: 767.98px) {
+  .page-heading {
+    display: block;
+  }
+
+  .page-heading .btn-group,
+  .page-heading .btn {
+    margin-top: 1rem;
+    width: 100%;
+  }
 }
