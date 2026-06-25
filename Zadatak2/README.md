@@ -102,12 +102,38 @@ Reporting i weather integracija su podrzavajuci moduli. Oni daju dodatnu poslovn
 
 ```mermaid
 flowchart LR
-    User[Korisnik garaze] --> EntryGate[Ulazna rampa]
-    EntryGate --> Backend[Parking sustav]
-    Backend --> Database[(Baza podataka)]
-    Backend --> PaymentMachine[Naplatni aparat]
-    PaymentMachine --> Backend
-    Backend --> ExitGate[Izlazna rampa]
+    Driver[Korisnik garaze] --> EntryGate[Ulazna rampa]
+    Driver --> PaymentMachine[Naplatni aparat]
+    Driver --> ExitGate[Izlazna rampa]
+
+    Admin[Administrator / vlasnik garaze] --> AdminPortal[Admin sucelje]
+    PublicDisplay[Display slobodnih mjesta] --> Driver
+
+    EntryGate --> Api[Backend API]
+    PaymentMachine --> Api
+    ExitGate --> Api
+    AdminPortal --> Api
+
+    Api --> SessionModule[Parking session modul]
+    Api --> PricingModule[Pricing modul]
+    Api --> ContractModule[Ugovorni korisnici]
+    Api --> CapacityModule[Kapacitet i slobodna mjesta]
+    Api --> ReportingModule[Reporting modul]
+
+    SessionModule --> Database[(Relacijska baza podataka)]
+    PricingModule --> Database
+    ContractModule --> Database
+    CapacityModule --> Database
+    ReportingModule --> Database
+
+    PricingModule --> WeatherService[Weather servis / senzor kise]
+    PaymentMachine --> PaymentProvider[Payment provider]
+    PaymentProvider --> PaymentMachine
+
+    CapacityModule --> PublicDisplay
+    ReportingModule --> OwnerReports[Mjesecni izvjestaji]
+    OwnerReports --> Admin
+    Api --> AuditLog[(Audit log)]
 ```
 
 ## Proces ulaska, naplate i izlaska
