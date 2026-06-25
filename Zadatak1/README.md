@@ -10,13 +10,13 @@ ASP.NET Core MVC web application for managing insurance partners and partner pol
 - Bootstrap 4 UI
 - jQuery for modal/AJAX policy entry
 
-## Features
+## Pages`r`n`r`n- Partner list.`r`n- New partner form.`r`n- New policy form.`r`n`r`n## Features
 
 - Partner list sorted by `CreatedAtUtc` descending.
 - Full name display from `FirstName` + `LastName`.
 - Clickable partner row with Bootstrap modal details.
 - New partner form with validation for all required fields.
-- Partner policy entry through a Bootstrap modal dialog.
+- Separate policy entry page and quick policy entry through a Bootstrap modal dialog.
 - Partner is marked with `*` when it has more than 5 policies or total policy amount greater than 5000.
 - New partner row is visually highlighted after successful redirect.
 - Database is created automatically on application startup.

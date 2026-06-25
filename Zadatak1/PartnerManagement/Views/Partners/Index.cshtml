@@ -9,7 +9,10 @@
         <h1 class="h3 mb-1">Insurance partners</h1>
         <p class="text-muted mb-0">Partners are sorted by creation date, newest first.</p>
     </div>
-    <a class="btn btn-primary" asp-action="Create">New partner</a>
+    <div class="btn-group">
+        <a class="btn btn-outline-primary" asp-action="CreatePolicyPage">New policy</a>
+        <a class="btn btn-primary" asp-action="Create">New partner</a>
+    </div>
 </div>
 
 @if (TempData["SuccessMessage"] is string successMessage)

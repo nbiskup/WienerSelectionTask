@@ -56,6 +56,33 @@ public sealed class PartnersController : Controller
         return RedirectToAction(nameof(Index), new { highlightId = partnerId });
     }
 
+    [HttpGet]
+    public async Task<IActionResult> CreatePolicyPage(int? partnerId = null)
+    {
+        await PopulatePartnerOptionsAsync();
+        return View(new PolicyCreateViewModel { PartnerId = partnerId ?? 0 });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CreatePolicyPage(PolicyCreateViewModel model)
+    {
+        if (!await _partnerRepository.PartnerExistsAsync(model.PartnerId))
+        {
+            ModelState.AddModelError(nameof(model.PartnerId), "Selected partner does not exist.");
+        }
+
+        if (!ModelState.IsValid)
+        {
+            await PopulatePartnerOptionsAsync();
+            return View(model);
+        }
+
+        await _partnerRepository.AddPolicyAsync(model);
+        TempData["SuccessMessage"] = "Policy was created successfully.";
+        return RedirectToAction(nameof(Index));
+    }
+
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> CreatePolicy(PolicyCreateViewModel model)
@@ -89,5 +116,10 @@ public sealed class PartnersController : Controller
             policyTotalFormatted = summary.TotalPolicyAmount.ToString("N2"),
             isImportant
         });
+    }
+
+    private async Task PopulatePartnerOptionsAsync()
+    {
+        ViewBag.PartnerOptions = await _partnerRepository.GetPartnerOptionsAsync();
     }
 }

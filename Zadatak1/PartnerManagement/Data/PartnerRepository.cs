@@ -54,6 +54,18 @@ public sealed class PartnerRepository : IPartnerRepository
         return partners.AsList();
     }
 
+    public async Task<IReadOnlyList<PartnerOption>> GetPartnerOptionsAsync()
+    {
+        const string sql = """
+            SELECT PartnerId, CONCAT(FirstName, ' ', LastName) AS FullName
+            FROM dbo.Partners
+            ORDER BY CreatedAtUtc DESC;
+            """;
+
+        using var connection = _connectionFactory.CreateDefaultConnection();
+        var partners = await connection.QueryAsync<PartnerOption>(sql);
+        return partners.AsList();
+    }
     public async Task<int> CreateAsync(PartnerCreateViewModel partner)
     {
         const string sql = """

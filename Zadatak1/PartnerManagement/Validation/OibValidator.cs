@@ -4,31 +4,46 @@ public static class OibValidator
 {
     public static bool IsValid(string? value)
     {
-        if (string.IsNullOrWhiteSpace(value) || value.Length != 11 || value.Any(c => !char.IsDigit(c)))
+        if (!HasExpectedFormat(value))
         {
             return false;
         }
 
-        var a = 10;
-        for (var i = 0; i < 10; i++)
+        return HasValidCheckDigit(value!);
+    }
+
+    private static bool HasExpectedFormat(string? value)
+    {
+        return !string.IsNullOrWhiteSpace(value)
+            && value.Length == 11
+            && value.All(char.IsDigit);
+    }
+
+    private static bool HasValidCheckDigit(string value)
+    {
+        // Croatian OIB uses the ISO 7064 MOD 11,10 control digit algorithm.
+        var remainder = 10;
+
+        for (var index = 0; index < 10; index++)
         {
-            a += value[i] - '0';
-            a %= 10;
-            if (a == 0)
+            var digit = value[index] - '0';
+            remainder = (remainder + digit) % 10;
+
+            if (remainder == 0)
             {
-                a = 10;
+                remainder = 10;
             }
 
-            a *= 2;
-            a %= 11;
+            remainder = (remainder * 2) % 11;
         }
 
-        var controlDigit = 11 - a;
-        if (controlDigit == 10)
+        var expectedCheckDigit = 11 - remainder;
+        if (expectedCheckDigit == 10)
         {
-            controlDigit = 0;
+            expectedCheckDigit = 0;
         }
 
-        return controlDigit == value[10] - '0';
+        var actualCheckDigit = value[10] - '0';
+        return expectedCheckDigit == actualCheckDigit;
     }
 }
